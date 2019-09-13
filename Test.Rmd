@@ -1,0 +1,67 @@
+---
+title: "Testing R Markdown"
+author: "Tahmidul Islam"
+date: "9/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GP Regression
+
+First we write the RBF (Gaussian) kernel function.
+
+```{r}
+library(kernlab)
+# RBF kernel
+
+ker <- function(x, y = 'NULL', l, sigf) {
+  rbf <- rbfdot(sigma = 1/l)
+  if(y == 'NULL')  return(sigf * kernelMatrix(rbf, x = x))
+  else  return(sigf * kernelMatrix(rbf, x = x, y= y))
+}
+
+```
+
+Now we make a grid of 10 equally spaced points from 0 to 1 and evaluate the kernel function.
+```{r}
+x <- seq(0,1, length.out = 10)
+round(ker(x = x, l = 1, sigf = 1),2)
+```
+
+We are ready to sample from a GP now. We use the covariance matrix produced by the kernel and sample from a zero mean GP.
+
+```{r}
+library(mvtnorm)
+mu <- rep(0, 10)
+sigma <- ker(x = x, l = .5, sigf = 1)
+fx <- rmvnorm(1, mean = mu, sigma = sigma)
+plot(x, fx, type = 'l', lwd = 2)
+```
+
+We can samples from this GP.
+
+```{r}
+fx <- rmvnorm(10, mean = mu, sigma = sigma)
+plot(x, fx[1,], type = 'l', ylim = c(min(fx), max(fx)), lwd = 2, col = 'grey')
+for (i in 1:10) lines(x, fx[i,], lwd = 2, col = 'grey')
+```
+
+Now lets try to fit complicated function.
+
+```{r}
+gx <- function(x) {sin(10 * x) + cos (20 * x)}
+curve(gx,0,1)
+```
+
+Now lets create a training dataset by adding white noise to the true function.
+
+```{r}
+y <- gx(x) + rnorm(10, 0, 1)
+plot(x, y, pch = 16)
+```
+The marginal likelihood of a GP model is pretty straightforward.$ Y \sim MN(0, K(\cdot, \cdot | \theta) + \sigma^2 I)$ where $(\theta, \sigma^2)$ are treated as hyperparameters. We write a function to compute the log marginal likelihood function.
+
+
