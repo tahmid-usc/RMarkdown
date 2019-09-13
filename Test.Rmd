@@ -3,6 +3,12 @@ title: "Testing R Markdown"
 author: "Tahmidul Islam"
 date: "9/13/2019"
 output: html_document
+
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 ---
 
 ```{r setup, include=FALSE}
@@ -62,6 +68,7 @@ Now lets create a training dataset by adding white noise to the true function.
 y <- gx(x) + rnorm(10, 0, 1)
 plot(x, y, pch = 16)
 ```
+
 The marginal likelihood of a GP model is pretty straightforward.$ Y \sim MN(0, K(\cdot, \cdot | \theta) + \sigma^2 I)$ where $(\theta, \sigma^2)$ are treated as hyperparameters. We write a function to compute the log marginal likelihood function.
 
 
